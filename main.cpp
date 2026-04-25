@@ -91,6 +91,79 @@ int currentTime = 0;
 SeatInfo seatData[MAX_TRAINS * 100]; // trainIdx * 100 + date
 int seatDataCount = 0;
 
+// File persistence
+void loadData() {
+    FILE* f = fopen("users.dat", "rb");
+    if (f) {
+        fread(&userCount, sizeof(int), 1, f);
+        fread(users, sizeof(User), userCount, f);
+        fclose(f);
+    }
+    
+    f = fopen("trains.dat", "rb");
+    if (f) {
+        fread(&trainCount, sizeof(int), 1, f);
+        fread(trains, sizeof(Train), trainCount, f);
+        fclose(f);
+    }
+    
+    f = fopen("orders.dat", "rb");
+    if (f) {
+        fread(&orderCount, sizeof(int), 1, f);
+        fread(orders, sizeof(Order), orderCount, f);
+        fclose(f);
+    }
+    
+    f = fopen("seats.dat", "rb");
+    if (f) {
+        fread(&seatDataCount, sizeof(int), 1, f);
+        fread(seatData, sizeof(SeatInfo), seatDataCount, f);
+        fclose(f);
+    }
+    
+    f = fopen("time.dat", "rb");
+    if (f) {
+        fread(&currentTime, sizeof(int), 1, f);
+        fclose(f);
+    }
+}
+
+void saveData() {
+    FILE* f = fopen("users.dat", "wb");
+    if (f) {
+        fwrite(&userCount, sizeof(int), 1, f);
+        fwrite(users, sizeof(User), userCount, f);
+        fclose(f);
+    }
+    
+    f = fopen("trains.dat", "wb");
+    if (f) {
+        fwrite(&trainCount, sizeof(int), 1, f);
+        fwrite(trains, sizeof(Train), trainCount, f);
+        fclose(f);
+    }
+    
+    f = fopen("orders.dat", "wb");
+    if (f) {
+        fwrite(&orderCount, sizeof(int), 1, f);
+        fwrite(orders, sizeof(Order), orderCount, f);
+        fclose(f);
+    }
+    
+    f = fopen("seats.dat", "wb");
+    if (f) {
+        fwrite(&seatDataCount, sizeof(int), 1, f);
+        fwrite(seatData, sizeof(SeatInfo), seatDataCount, f);
+        fclose(f);
+    }
+    
+    f = fopen("time.dat", "wb");
+    if (f) {
+        fwrite(&currentTime, sizeof(int), 1, f);
+        fclose(f);
+    }
+}
+
 // Helper functions
 int dateToInt(const char* date) {
     int month = (date[0] - '0') * 10 + (date[1] - '0');
@@ -895,16 +968,25 @@ void cmd_clean() {
     for (int i = 0; i < MAX_USERS; i++) {
         loggedIn[i] = false;
     }
+    // Delete data files
+    remove("users.dat");
+    remove("trains.dat");
+    remove("orders.dat");
+    remove("seats.dat");
+    remove("time.dat");
     cout << "0\n";
 }
 
 void cmd_exit() {
+    saveData();
     cout << "bye\n";
 }
 
 int main() {
     ios::sync_with_stdio(false);
     cin.tie(0);
+    
+    loadData();
     
     char line[10005];
     while (cin.getline(line, 10005)) {
@@ -947,6 +1029,11 @@ int main() {
         } else if (strcmp(cmd, "exit") == 0) {
             cmd_exit();
             break;
+        }
+        
+        // Save data after each command (except exit which saves itself)
+        if (strcmp(cmd, "exit") != 0) {
+            saveData();
         }
     }
     
